@@ -58,8 +58,7 @@ class DroneController:
                     self.telemetry["speed"] = speed
             async def mon_batt():
                 async for batt in self.drone.telemetry.battery():
-                    val = batt.remaining_percent
-                    self.telemetry["battery"] = int(val * 100) if val <= 1.0 else int(val)
+                    self.telemetry["battery"] = int(batt.remaining_percent * 100)
             async def mon_armed():
                 async for armed in self.drone.telemetry.armed():
                     self.telemetry["armed"] = armed
