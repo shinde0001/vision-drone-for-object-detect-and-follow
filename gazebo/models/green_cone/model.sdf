@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="green_cone">
+    <static>true</static>
+    <link name="link">
+      <inertial>
+        <mass>0.8</mass>
+        <inertia>
+          <ixx>0.063</ixx><iyy>0.063</iyy><izz>0.063</izz>
+          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://green_cone/meshes/cone.obj</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://green_cone/meshes/cone.obj</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0 0.8 0 1</ambient>
+          <diffuse>0 1 0 1</diffuse>
+          <specular>0 0.3 0 1</specular>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

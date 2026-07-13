@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="vision_targets">
+
+    <!-- Physics -->
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <!-- Sun -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground Plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- ====== TARGET OBJECTS ====== -->
+
+    <!-- Red Sphere — 5m North -->
+    <model name="red_sphere">
+      <include>
+        <uri>model://red_sphere</uri>
+      </include>
+      <pose>5 0 0.3 0 0 0</pose>
+    </model>
+
+    <!-- Blue Cube — 5m East -->
+    <model name="blue_cube">
+      <include>
+        <uri>model://blue_cube</uri>
+      </include>
+      <pose>0 5 0.25 0 0 0</pose>
+    </model>
+
+    <!-- Green Cone — 5m South -->
+    <model name="green_cone">
+      <include>
+        <uri>model://green_cone</uri>
+      </include>
+      <pose>-5 0 0.3 0 0 0</pose>
+    </model>
+
+    <!-- Yellow Cylinder — 5m West -->
+    <model name="yellow_cylinder">
+      <include>
+        <uri>model://yellow_cylinder</uri>
+      </include>
+      <pose>0 -5 0.3 0 0 0</pose>
+    </model>
+
+    <!-- Person Standing — 5m NE -->
+    <model name="person_standing">
+      <include>
+        <uri>model://person_standing</uri>
+      </include>
+      <pose>5 5 0.7 0 0 0</pose>
+    </model>
+
+  </world>
+</sdf>

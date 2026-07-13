@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision Drone - Target Follow Dashboard</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-header">
+            <div class="logo">
+                <span class="icon">🎯</span>
+                <h1>Vision AI Target Follow</h1>
+            </div>
+            <div class="connection-status" id="connection-status">
+                <div class="status-indicator offline"></div>
+                <span id="status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+                <main class="dashboard-grid">
+            
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <!-- Target Selection -->
+                <section class="card glass-panel">
+                    <h2>Target Selection</h2>
+                    <p class="subtitle">Select the object for the AI to track and follow.</p>
+                    <div class="target-grid" id="target-selection">
+                        <button class="target-btn active" data-target="person"><span class="icon">👤</span> Person</button>
+                        <button class="target-btn" data-target="car"><span class="icon">🚗</span> Car</button>
+                        <button class="target-btn" data-target="red_sphere"><span class="icon">🔴</span> Red Sphere</button>
+                        <button class="target-btn" data-target="blue_cube"><span class="icon">🟦</span> Blue Cube</button>
+                        <button class="target-btn" data-target="green_cone"><span class="icon">🟢</span> Green Cone</button>
+                        <button class="target-btn" data-target="yellow_cylinder"><span class="icon">🟡</span> Yellow Cylinder</button>
+                    </div>
+                </section>
+
+                <!-- Target Behavior -->
+                <section class="card glass-panel">
+                    <h2>Target Behavior</h2>
+                    <p class="subtitle">Set the movement pattern for the target.</p>
+                    <div class="behavior-controls">
+                        <div class="control-row">
+                            <button id="btn-behavior-toggle" class="btn btn-secondary" style="flex: 1; margin-bottom: 5px;">Hold Position (No Physics)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Flight Controls -->
+                <section class="card glass-panel flight-controls">
+                    <h2>Flight Controls</h2>
+                    <div class="control-row">
+                        <button class="btn btn-primary" id="btn-arm">ARM</button>
+                        <button class="btn btn-danger" id="btn-disarm">DISARM</button>
+                    </div>
+                    <div class="control-row" style="margin-top: 0.5rem;">
+                        <button class="btn btn-secondary" id="btn-takeoff">TAKEOFF (5m)</button>
+                        <button class="btn btn-secondary" id="btn-land">LAND</button>
+                    </div>
+                    <div class="control-action">
+                        <button class="btn btn-action start" id="btn-follow">▶ FOLLOW TARGET</button>
+                    </div>
+                </section>
+                
+                <!-- Manual Flight Controls -->
+                <section class="card glass-panel manual-controls">
+                    <h2>Manual Controls</h2>
+                    <div class="manual-layout">
+                        <!-- Left: Translation Pad -->
+                        <div class="control-pad-container">
+                            <span class="pad-label">Directional</span>
+                            <div class="dpad">
+                                <div class="dpad-cell"></div>
+                                <button class="btn btn-manual" id="btn-forward" data-direction="forward" title="Move Forward (W / ArrowUp)">▲</button>
+                                <div class="dpad-cell"></div>
+                                <button class="btn btn-manual" id="btn-left" data-direction="left" title="Move Left (A / ArrowLeft)">◀</button>
+                                <button class="btn btn-manual btn-center" disabled>⌖</button>
+                                <button class="btn btn-manual" id="btn-right" data-direction="right" title="Move Right (D / ArrowRight)">▶</button>
+                                <div class="dpad-cell"></div>
+                                <button class="btn btn-manual" id="btn-backward" data-direction="backward" title="Move Backward (S / ArrowDown)">▼</button>
+                                <div class="dpad-cell"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right: Altitude Pad and RTH -->
+                        <div class="vertical-controls-container">
+                            <span class="pad-label">Alt / Action</span>
+                            <div class="vertical-buttons">
+                                <button class="btn btn-manual btn-alt" id="btn-up" data-direction="up" title="Ascend (Space)"><span class="icon">⏶</span> UP</button>
+                                <button class="btn btn-manual btn-alt" id="btn-down" data-direction="down" title="Descend (Shift)"><span class="icon">⏷</span> DOWN</button>
+                                <button class="btn btn-rth" id="btn-rth" title="Return to Launch"><span class="icon">🏠</span> RTH</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+
+            <!-- Center Column: Video Feed -->
+            <section class="video-section card glass-panel">
+                <div class="card-header">
+                    <h2>Live Video Feed</h2>
+                    <span class="badge" id="mode-badge">UNKNOWN</span>
+                </div>
+                <div class="video-container">
+                    <img id="video-stream" src="/video_feed" alt="Live Drone Camera Feed" />
+                    <div class="crosshair"></div>
+                </div>
+            </section>
+
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right">
+                <!-- Detection Info -->
+                <section class="card glass-panel detection-info">
+                    <h2>Detection Status</h2>
+                    <div class="info-row"><span class="label">Target:</span><span class="value highlight" id="det-class">--</span></div>
+                    <div class="info-row"><span class="label">Confidence:</span><span class="value" id="det-conf">--</span></div>
+                    <div class="info-row"><span class="label">Distance:</span><span class="value" id="det-dist">--</span></div>
+                </section>
+
+                <!-- Telemetry -->
+                <section class="card glass-panel telemetry-panel">
+                    <h2>Telemetry</h2>
+                    <div class="stats-grid">
+                        <div class="stat-box"><span class="label">Altitude</span><span class="value" id="tel-alt">0.0m</span></div>
+                        <div class="stat-box"><span class="label">Speed</span><span class="value" id="tel-speed">0.0m/s</span></div>
+                        <div class="stat-box"><span class="label">Battery</span><span class="value" id="tel-batt">100%</span></div>
+                    </div>
+                </section>
+
+                <!-- Controller Tuning -->
+                <section class="card glass-panel tuning-panel">
+                    <h2>Controller Tuning</h2>
+                    <p class="subtitle">Fine-tune PID & smoothing</p>
+                    <div class="tuning-controls">
+                        <div class="tuning-group">
+                            <h3>Proportional Gains (P)</h3>
+                            <div class="control-row-tuning">
+                                <label for="range-kp-yaw">Yaw (P): <span id="val-kp-yaw">0.12</span></label>
+                                <input type="range" id="range-kp-yaw" min="0.01" max="0.5" step="0.01" value="0.12" class="slider" />
+                            </div>
+                            <div class="control-row-tuning">
+                                <label for="range-kp-fwd">Forward (P): <span id="val-kp-fwd">0.25</span></label>
+                                <input type="range" id="range-kp-fwd" min="0.01" max="0.8" step="0.01" value="0.25" class="slider" />
+                            </div>
+                            <div class="control-row-tuning">
+                                <label for="range-kp-alt">Altitude (P): <span id="val-kp-alt">0.25</span></label>
+                                <input type="range" id="range-kp-alt" min="0.01" max="0.6" step="0.01" value="0.25" class="slider" />
+                            </div>
+                        </div>
+                        <div class="tuning-group" style="margin-top: 10px;">
+                            <h3>Smoothing Factors (&alpha;)</h3>
+                            <div class="control-row-tuning">
+                                <label for="range-alpha-yaw">Yaw Smooth: <span id="val-alpha-yaw">0.15</span></label>
+                                <input type="range" id="range-alpha-yaw" min="0.01" max="1.0" step="0.01" value="0.15" class="slider" />
+                            </div>
+                            <div class="control-row-tuning">
+                                <label for="range-alpha-fwd">Forward Smooth: <span id="val-alpha-fwd">0.10</span></label>
+                                <input type="range" id="range-alpha-fwd" min="0.01" max="1.0" step="0.01" value="0.10" class="slider" />
+                            </div>
+                            <div class="control-row-tuning">
+                                <label for="range-alpha-alt">Altitude Smooth: <span id="val-alpha-alt">0.10</span></label>
+                                <input type="range" id="range-alpha-alt" min="0.01" max="1.0" step="0.01" value="0.10" class="slider" />
+                            </div>
+                        </div>
+                        <button id="btn-tuning-save" class="btn btn-primary" style="margin-top:10px; width:100%">UPDATE TUNING</button>
+                    </div>
+                </section>
+            </aside>
+        </main>
+    </div>
+
+    <script>
+        // UI Elements
+        const statusIndicator = document.querySelector('.status-indicator');
+        const statusText = document.getElementById('status-text');
+        const modeBadge = document.getElementById('mode-badge');
+
+        const telAlt = document.getElementById('tel-alt');
+        const telSpeed = document.getElementById('tel-speed');
+        const telBatt = document.getElementById('tel-batt');
+
+        const detClass = document.getElementById('det-class');
+        const detConf = document.getElementById('det-conf');
+        const detDist = document.getElementById('det-dist');
+
+        const btnFollow = document.getElementById('btn-follow');
+
+        let followActive = false;
+
+        // WebSocket Setup
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            const ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                statusIndicator.className = 'status-indicator online';
+                statusText.innerText = 'Connected';
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                // Update Telemetry
+                if (data.telemetry) {
+                    telAlt.innerText = data.telemetry.altitude.toFixed(1) + 'm';
+                    telSpeed.innerText = data.telemetry.speed.toFixed(1) + 'm/s';
+                    telBatt.innerText = data.telemetry.battery + '%';
+
+                    modeBadge.innerText = data.telemetry.flight_mode;
+                    if (data.telemetry.armed) {
+                        modeBadge.classList.add('armed');
+                    } else {
+                        modeBadge.classList.remove('armed');
+                    }
+                }
+
+                // Update Detection
+                if (data.detection) {
+                    detClass.innerText = data.detection.class;
+                    detConf.innerText = (data.detection.confidence * 100).toFixed(0) + '%';
+                    detDist.innerText = data.detection.distance > 0 ? data.detection.distance.toFixed(1) + 'm' : 'N/A';
+                    detClass.style.color = 'var(--accent-green)';
+                } else {
+                    detClass.innerText = 'Searching...';
+                    detConf.innerText = '--';
+                    detDist.innerText = '--';
+                    detClass.style.color = 'var(--text-dim)';
+                }
+
+                // Update Follow Status
+                if (data.follow_active !== followActive) {
+                    followActive = data.follow_active;
+                    if (followActive) {
+                        btnFollow.innerText = '⏹ STOP FOLLOW';
+                        btnFollow.classList.replace('start', 'stop');
+                    } else {
+                        btnFollow.innerText = '▶ FOLLOW TARGET';
+                        btnFollow.classList.replace('stop', 'start');
+                    }
+                }
+
+                // Update Target Behavior from server sync
+                if (data.target_behavior && typeof targetBehaviorActive !== 'undefined') {
+                    if (data.target_behavior.active !== targetBehaviorActive) {
+                        targetBehaviorActive = data.target_behavior.active;
+                        updateBehaviorBtnUI();
+                    }
+                }
+
+
+                // Initialize tuning parameters from server on first connection/message
+                if (data.follower_params && !followerParamsInitialized) {
+                    followerParamsInitialized = true;
+
+                    document.getElementById('range-kp-yaw').value = data.follower_params.kp_yaw;
+                    document.getElementById('val-kp-yaw').innerText = data.follower_params.kp_yaw.toFixed(2);
+
+                    document.getElementById('range-kp-fwd').value = data.follower_params.kp_fwd;
+                    document.getElementById('val-kp-fwd').innerText = data.follower_params.kp_fwd.toFixed(2);
+
+                    document.getElementById('range-kp-alt').value = data.follower_params.kp_alt;
+                    document.getElementById('val-kp-alt').innerText = data.follower_params.kp_alt.toFixed(2);
+
+                    document.getElementById('range-alpha-yaw').value = data.follower_params.alpha_yaw;
+                    document.getElementById('val-alpha-yaw').innerText = data.follower_params.alpha_yaw.toFixed(2);
+
+                    document.getElementById('range-alpha-fwd').value = data.follower_params.alpha_fwd;
+                    document.getElementById('val-alpha-fwd').innerText = data.follower_params.alpha_fwd.toFixed(2);
+
+                    document.getElementById('range-alpha-alt').value = data.follower_params.alpha_alt;
+                    document.getElementById('val-alpha-alt').innerText = data.follower_params.alpha_alt.toFixed(2);
+
+                    if (data.follower_params.max_fwd_speed !== undefined) {
+                        document.getElementById('range-max-fwd-speed').value = data.follower_params.max_fwd_speed;
+                        document.getElementById('val-max-fwd-speed').innerText = data.follower_params.max_fwd_speed.toFixed(1);
+                    }
+                }
+
+                // Connection overall
+                if (!data.drone_connected) {
+                    modeBadge.innerText = 'NO DRONE';
+                    modeBadge.classList.remove('armed');
+                }
+
+                // Enable/disable manual controls based on arm state and connection
+                const isControlEnabled = data.drone_connected && data.telemetry && data.telemetry.armed;
+                document.querySelectorAll('.btn-manual, .btn-rth').forEach(btn => {
+                    if (btn.classList.contains('btn-center')) return;
+                    btn.disabled = !isControlEnabled;
+                });
+            };
+
+            ws.onclose = () => {
+                statusIndicator.className = 'status-indicator offline';
+                statusText.innerText = 'Disconnected';
+                setTimeout(connectWebSocket, 2000); // Reconnect
+            };
+        }
+
+        connectWebSocket();
+
+        // API Calls
+        async function postCommand(endpoint, payload = {}) {
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Request failed: ' + e.message);
+            }
+        }
+
+        // Target Selection
+        document.querySelectorAll('.target-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                postCommand('/api/target', { target: btn.dataset.target });
+            });
+        });
+
+        // Target Behavior
+        let targetBehaviorActive = false;
+        const btnBehaviorToggle = document.getElementById('btn-behavior-toggle');
+
+        btnBehaviorToggle.addEventListener('click', () => {
+            targetBehaviorActive = !targetBehaviorActive;
+            updateBehaviorBtnUI();
+            postCommand('/api/target/behavior', { active: targetBehaviorActive });
+        });
+
+        function updateBehaviorBtnUI() {
+            if (targetBehaviorActive) {
+                btnBehaviorToggle.innerText = 'Moving Randomly';
+                btnBehaviorToggle.classList.replace('btn-secondary', 'btn-primary');
+            } else {
+                btnBehaviorToggle.innerText = 'Hold Position (No Physics)';
+                btnBehaviorToggle.classList.replace('btn-primary', 'btn-secondary');
+            }
+        }
+
+        // Flight Buttons
+        document.getElementById('btn-arm').addEventListener('click', () => postCommand('/api/arm'));
+        document.getElementById('btn-disarm').addEventListener('click', () => postCommand('/api/disarm'));
+        document.getElementById('btn-takeoff').addEventListener('click', () => postCommand('/api/takeoff', { altitude: 5.0 }));
+        document.getElementById('btn-land').addEventListener('click', () => postCommand('/api/land'));
+
+        btnFollow.addEventListener('click', () => {
+            if (followActive) {
+                postCommand('/api/follow/stop');
+            } else {
+                postCommand('/api/follow/start');
+            }
+        });
+
+        // --- Manual Flight Controls Logic ---
+        const activeDirections = {
+            forward: false,
+            backward: false,
+            left: false,
+            right: false,
+            up: false,
+            down: false,
+            yawLeft: false,
+            yawRight: false
+        };
+
+        let lastSentVelocity = { forward: 0.0, right: 0.0, down: 0.0, yaw: 0.0 };
+
+        function updateManualVelocity() {
+            let f = 0.0;
+            let r = 0.0;
+            let d = 0.0;
+            let y = 0.0;
+
+            if (activeDirections.forward) f += 1.5;
+            if (activeDirections.backward) f -= 1.5;
+            if (activeDirections.right) r += 1.5;
+            if (activeDirections.left) r -= 1.5;
+            if (activeDirections.up) d -= 1.0; // Negative down is UP
+            if (activeDirections.down) d += 1.0; // Positive down is DOWN
+            if (activeDirections.yawLeft) y -= 45.0; // Counter-clockwise
+            if (activeDirections.yawRight) y += 45.0; // Clockwise
+
+            // Only send if values changed
+            if (f !== lastSentVelocity.forward || r !== lastSentVelocity.right || d !== lastSentVelocity.down || y !== lastSentVelocity.yaw) {
+                lastSentVelocity = { forward: f, right: r, down: d, yaw: y };
+                postCommand('/api/manual/move', lastSentVelocity);
+            }
+        }
+
+        function highlightButton(direction, active) {
+            let btnId;
+            if (direction === 'forward') btnId = 'btn-forward';
+            else if (direction === 'backward') btnId = 'btn-backward';
+            else if (direction === 'left') btnId = 'btn-left';
+            else if (direction === 'right') btnId = 'btn-right';
+            else if (direction === 'up') btnId = 'btn-up';
+            else if (direction === 'down') btnId = 'btn-down';
+            else if (direction === 'yawLeft') btnId = 'btn-yawLeft';
+            else if (direction === 'yawRight') btnId = 'btn-yawRight';
+
+            if (btnId) {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    if (active) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                }
+            }
+        }
+
+        // Mouse & Touch events for UI buttons
+        const btnDirections = ['forward', 'backward', 'left', 'right', 'up', 'down', 'yawLeft', 'yawRight'];
+        btnDirections.forEach(dir => {
+            const btn = document.getElementById(`btn-${dir}`);
+            if (btn) {
+                // Mouse Down
+                btn.addEventListener('mousedown', () => {
+                    if (!btn.disabled) {
+                        activeDirections[dir] = true;
+                        btn.classList.add('active');
+                        updateManualVelocity();
+                    }
+                });
+
+                const stopMovement = () => {
+                    if (activeDirections[dir]) {
+                        activeDirections[dir] = false;
+                        btn.classList.remove('active');
+                        updateManualVelocity();
+                    }
+                };
+
+                // Mouse Up / Leave
+                btn.addEventListener('mouseup', stopMovement);
+                btn.addEventListener('mouseleave', stopMovement);
+
+                // Touch Start (Mobile)
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!btn.disabled) {
+                        activeDirections[dir] = true;
+                        btn.classList.add('active');
+                        updateManualVelocity();
+                    }
+                });
+
+                // Touch End
+                btn.addEventListener('touchend', stopMovement);
+                btn.addEventListener('touchcancel', stopMovement);
+            }
+        });
+
+        // Keyboard Controls
+        const keyMap = {
+            'KeyW': 'forward',
+            'ArrowUp': 'forward',
+            'KeyS': 'backward',
+            'ArrowDown': 'backward',
+            'KeyA': 'left',
+            'ArrowLeft': 'left',
+            'KeyD': 'right',
+            'ArrowRight': 'right',
+            'KeyQ': 'yawLeft',
+            'KeyE': 'yawRight',
+            'Space': 'up',
+            'ShiftLeft': 'down',
+            'ShiftRight': 'down'
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            const direction = keyMap[e.code];
+            if (direction && !activeDirections[direction]) {
+                e.preventDefault();
+
+                // Check if control is enabled (armed & connected)
+                if (modeBadge.innerText !== 'NO DRONE' && modeBadge.classList.contains('armed')) {
+                    activeDirections[direction] = true;
+                    highlightButton(direction, true);
+                    updateManualVelocity();
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const direction = keyMap[e.code];
+            if (direction && activeDirections[direction]) {
+                activeDirections[direction] = false;
+                highlightButton(direction, false);
+                updateManualVelocity();
+            }
+        });
+
+        // RTH Button Click Handler
+        const btnRth = document.getElementById('btn-rth');
+        if (btnRth) {
+            btnRth.addEventListener('click', () => {
+                if (!btnRth.disabled && confirm('Are you sure you want to trigger Return to Home?')) {
+                    postCommand('/api/rtl');
+                }
+            });
+        }
+
+
+        // --- Controller Tuning Logic ---
+        let followerParamsInitialized = false;
+
+        // Slider value label updates
+        const sliders = ['kp-yaw', 'kp-fwd', 'kp-alt', 'alpha-yaw', 'alpha-fwd', 'alpha-alt'];
+        sliders.forEach(id => {
+            const rangeInput = document.getElementById(`range-${id}`);
+            const valLabel = document.getElementById(`val-${id}`);
+            if (rangeInput && valLabel) {
+                rangeInput.addEventListener('input', () => {
+                    valLabel.innerText = parseFloat(rangeInput.value).toFixed(2);
+                });
+            }
+        });
+
+        // Special slider listener for max fwd speed (toFixed(1))
+        const fwdSpeedInput = document.getElementById('range-max-fwd-speed');
+        const fwdSpeedLabel = document.getElementById('val-max-fwd-speed');
+        if (fwdSpeedInput && fwdSpeedLabel) {
+            fwdSpeedInput.addEventListener('input', () => {
+                fwdSpeedLabel.innerText = parseFloat(fwdSpeedInput.value).toFixed(1);
+            });
+        }
+
+        // Tuning Save Button click handler
+        const btnTuningSave = document.getElementById('btn-tuning-save');
+        if (btnTuningSave) {
+            btnTuningSave.addEventListener('click', () => {
+                const payload = {
+                    kp_yaw: parseFloat(document.getElementById('range-kp-yaw').value),
+                    kp_fwd: parseFloat(document.getElementById('range-kp-fwd').value),
+                    kp_alt: parseFloat(document.getElementById('range-kp-alt').value),
+                    alpha_yaw: parseFloat(document.getElementById('range-alpha-yaw').value),
+                    alpha_fwd: parseFloat(document.getElementById('range-alpha-fwd').value),
+                    alpha_alt: parseFloat(document.getElementById('range-alpha-alt').value),
+                    max_fwd_speed: parseFloat(document.getElementById('range-max-fwd-speed').value)
+                };
+
+                postCommand('/api/follower/parameters', payload);
+
+                // Provide visual feedback
+                const origText = btnTuningSave.innerText;
+                btnTuningSave.innerText = 'TUNING UPDATED!';
+                setTimeout(() => { btnTuningSave.innerText = origText; }, 1000);
+            });
+        }
+
+    </script>
+</body>
+
+</html>
