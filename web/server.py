@@ -145,7 +145,7 @@ async def target_movement_loop():
     # Map model names to their correct ground Z-heights
     model_heights = {
         "person_standing": 0.7,
-        "car": 0.4,
+        "car": 0.0,
         "red_sphere": 0.3,
         "blue_cube": 0.25,
         "green_cone": 0.3,
@@ -159,6 +159,16 @@ async def target_movement_loop():
         "blue_cube": (0.0, 5.0),
         "green_cone": (-5.0, 0.0),
         "yellow_cylinder": (0.0, -5.0)
+    }
+
+    # Physical sizes (radii) of the models in meters
+    model_sizes = {
+        "person_standing": 0.4,
+        "car": 2.5,
+        "red_sphere": 0.3,
+        "blue_cube": 0.3,
+        "green_cone": 0.3,
+        "yellow_cylinder": 0.3
     }
 
     last_target_model = None
@@ -183,19 +193,44 @@ async def target_movement_loop():
                 curr = beh["current_pos"]
                 tgt = beh["target_pos"]
                 
+                # Check if position is valid (does not collide with other static objects)
+                def is_position_valid(x, y, current_model):
+                    for other_model, default_pos in model_defaults.items():
+                        if other_model == current_model:
+                            continue
+                        dist_to_other = math.hypot(x - default_pos[0], y - default_pos[1])
+                        # Avoid other objects by a radius of double their size
+                        min_dist = 3.0 * model_sizes.get(other_model, 0.3)
+                        if dist_to_other < min_dist:
+                            return False
+                    return True
+
                 # If close to target destination, pick a new one
                 dist = math.hypot(tgt["x"] - curr["x"], tgt["y"] - curr["y"])
                 if dist < 0.2:
                     half = wall_size / 2.0
-                    tgt["x"] = random.uniform(-half, half)
-                    tgt["y"] = random.uniform(-half, half)
+                    for _ in range(100):
+                        new_x = random.uniform(-half, half)
+                        new_y = random.uniform(-half, half)
+                        if is_position_valid(new_x, new_y, gz_model):
+                            tgt["x"] = new_x
+                            tgt["y"] = new_y
+                            break
                 else:
                     # Move towards target
                     dx = (tgt["x"] - curr["x"]) / dist
                     dy = (tgt["y"] - curr["y"]) / dist
                     move_dist = min(speed * dt, dist)
-                    curr["x"] += dx * move_dist
-                    curr["y"] += dy * move_dist
+                    next_x = curr["x"] + dx * move_dist
+                    next_y = curr["y"] + dy * move_dist
+                    
+                    if is_position_valid(next_x, next_y, gz_model):
+                        curr["x"] = next_x
+                        curr["y"] = next_y
+                    else:
+                        # Collision path detected: abort path to force generating a new one
+                        tgt["x"] = curr["x"]
+                        tgt["y"] = curr["y"]
                 
                 # Update gazebo model using subprocess
                 # We run this in the background to avoid blocking the event loop

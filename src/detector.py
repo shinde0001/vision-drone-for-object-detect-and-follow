@@ -20,8 +20,6 @@ class Detector:
             "blue_cube": (np.array([100, 100, 100]), np.array([140, 255, 255])),
             "green_cone": (np.array([35, 40, 40]), np.array([85, 255, 255])),
             "yellow_cylinder": (np.array([20, 100, 100]), np.array([35, 255, 255])),
-            "person": (np.array([5, 100, 100]), np.array([20, 255, 255])), # Orange color bounds
-            "car": (np.array([140, 100, 100]), np.array([170, 255, 255])), # Magenta color bounds
         }
 
     def set_target(self, target_class):
@@ -53,11 +51,16 @@ class Detector:
                         w = x2 - x1
                         h = y2 - y1
                         
-                        # Calculate distance (rough estimation based on pixel height)
-                        # Assumes focal length ~ 277 (from camera config) and object height ~1.7m (person)
+                        # Calculate distance dynamically based on target height
+                        # Assumes camera focal length ~ 277.19 (from camera config)
                         # Dist = (Real_Height * Focal_Length) / Pixel_Height
-                        # Using a simplified constant for demonstration
-                        dist = 400.0 / h if h > 0 else -1
+                        real_height = 1.0  # default fallback
+                        if class_name == "person":
+                            real_height = 1.8
+                        elif class_name == "car":
+                            real_height = 1.5
+                            
+                        dist = (real_height * 277.19) / h if h > 0 else -1
                         
                         detection_info = {
                             "class": class_name,

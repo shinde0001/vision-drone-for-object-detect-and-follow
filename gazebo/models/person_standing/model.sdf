@@ -1,114 +1,46 @@
-<?xml version="1.0"?>
-<sdf version="1.6">
+<?xml version="1.0" ?>
+<sdf version="1.5">
   <model name="person_standing">
-    <static>true</static>
-    <link name="torso">
-      <pose>0 0 0.55 0 0 0</pose>
+    <link name="link">
       <inertial>
-        <mass>5.0</mass>
+        <pose>0 -0.1 0.95 0 0 0</pose>
+        <mass>80.0</mass>
         <inertia>
-          <ixx>0.5</ixx><iyy>0.5</iyy><izz>0.1</izz>
-          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          <ixx>24.88</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>25.73</iyy>
+          <iyz>0</iyz>
+          <izz>2.48</izz>
         </inertia>
       </inertial>
-      <collision name="torso_collision">
+
+      <collision name="bottom">
+        <pose>0 -0.1 0.01 0 0 0</pose>
         <geometry>
-          <box><size>0.4 0.25 1.1</size></box>
+          <box>
+            <size>0.5 0.35 0.02</size>
+          </box>
         </geometry>
       </collision>
-      <visual name="torso_visual">
+
+      <collision name="person">
+        <pose>0 0 0.02 0.04 0 0</pose>
         <geometry>
-          <box><size>0.4 0.25 1.1</size></box>
-        </geometry>
-        <material>
-          <ambient>1.0 0.5 0.0 1</ambient>
-          <diffuse>1.0 0.5 0.0 1</diffuse>
-        </material>
-      </visual>
-    </link>
-    <link name="head">
-      <pose>0 0 1.25 0 0 0</pose>
-      <inertial>
-        <mass>1.0</mass>
-        <inertia>
-          <ixx>0.004</ixx><iyy>0.004</iyy><izz>0.004</izz>
-          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
-        </inertia>
-      </inertial>
-      <collision name="head_collision">
-        <geometry>
-          <sphere><radius>0.12</radius></sphere>
+          <mesh>
+            <uri>model://person_standing/meshes/standing.dae</uri>
+          </mesh>
         </geometry>
       </collision>
-      <visual name="head_visual">
+
+      <visual name="visual">
+        <pose>0 0 0.02 0.04 0 0</pose>
         <geometry>
-          <sphere><radius>0.12</radius></sphere>
+          <mesh>
+            <uri>model://person_standing/meshes/standing.dae</uri>
+          </mesh>
         </geometry>
-        <material>
-          <ambient>0.85 0.65 0.45 1</ambient>
-          <diffuse>0.85 0.65 0.45 1</diffuse>
-        </material>
       </visual>
     </link>
-    <link name="left_leg">
-      <pose>0.1 0 -0.35 0 0 0</pose>
-      <inertial>
-        <mass>2.0</mass>
-        <inertia>
-          <ixx>0.06</ixx><iyy>0.06</iyy><izz>0.005</izz>
-          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
-        </inertia>
-      </inertial>
-      <collision name="left_leg_collision">
-        <geometry>
-          <cylinder><radius>0.08</radius><length>0.7</length></cylinder>
-        </geometry>
-      </collision>
-      <visual name="left_leg_visual">
-        <geometry>
-          <cylinder><radius>0.08</radius><length>0.7</length></cylinder>
-        </geometry>
-        <material>
-          <ambient>0.2 0.2 0.2 1</ambient>
-          <diffuse>0.2 0.2 0.2 1</diffuse>
-        </material>
-      </visual>
-    </link>
-    <link name="right_leg">
-      <pose>-0.1 0 -0.35 0 0 0</pose>
-      <inertial>
-        <mass>2.0</mass>
-        <inertia>
-          <ixx>0.06</ixx><iyy>0.06</iyy><izz>0.005</izz>
-          <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
-        </inertia>
-      </inertial>
-      <collision name="right_leg_collision">
-        <geometry>
-          <cylinder><radius>0.08</radius><length>0.7</length></cylinder>
-        </geometry>
-      </collision>
-      <visual name="right_leg_visual">
-        <geometry>
-          <cylinder><radius>0.08</radius><length>0.7</length></cylinder>
-        </geometry>
-        <material>
-          <ambient>0.2 0.2 0.2 1</ambient>
-          <diffuse>0.2 0.2 0.2 1</diffuse>
-        </material>
-      </visual>
-    </link>
-    <joint name="head_joint" type="fixed">
-      <parent>torso</parent>
-      <child>head</child>
-    </joint>
-    <joint name="left_leg_joint" type="fixed">
-      <parent>torso</parent>
-      <child>left_leg</child>
-    </joint>
-    <joint name="right_leg_joint" type="fixed">
-      <parent>torso</parent>
-      <child>right_leg</child>
-    </joint>
   </model>
 </sdf>
