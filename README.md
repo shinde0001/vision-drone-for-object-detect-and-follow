@@ -64,6 +64,11 @@ graph TD
   * Real-time flight telemetry (altitude, battery, GPS connection quality).
 * **Control Center**: Dynamic target selection grid, flight parameters tuning UI, live state displays, and flight-state overrides.
 
+### 5. 🌐 Real-Time SLAM & Autonomous Exploration
+* **Visual Odometry (`src/visual_odometry.py`)**: Estimates the 3D camera pose and trajectory in real-time by tracking salient features (using Lucas-Kanade optical flow and ORB/FAST descriptors) across video frames, eliminating reliance on global GPS.
+* **Occupancy Mapping (`src/map_builder.py`)**: Projects local camera observations into a global 2D occupancy grid. The grid categorizes space into `unexplored`, `free`, and `occupied` cells, which is served as a live telemetry image (`/map_image`).
+* **Frontier-Based Exploration (`src/explorer.py`)**: When the user triggers the **SLAM Explore** command, the path planner runs frontier detection. It targets boundary cells between explored free-space and unexplored zones, driving the drone to systematically map out unknown areas of the world.
+
 ---
 
 ## 🛠️ Requirements & Dependencies
@@ -112,7 +117,10 @@ Navigate to `http://localhost:8080` in your web browser.
 │   ├── camera_stream.py                # GStreamer frame receiver thread
 │   ├── detector.py                     # Dual-path object detector (YOLOv8/HSV)
 │   ├── drone_controller.py             # MAVSDK abstraction interface
-│   └── follower.py                     # Flight controller tracking logic
+│   ├── follower.py                     # Flight controller tracking logic
+│   ├── visual_odometry.py              # Feature-based visual odometry (VO) estimator
+│   ├── map_builder.py                  # Real-time 2D occupancy grid mapper
+│   └── explorer.py                     # Frontier exploration path planner
 ├── web/
 │   ├── server.py                       # FastAPI server & telemetry router
 │   └── templates/                      # Dashboard UI templates
